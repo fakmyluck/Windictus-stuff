@@ -192,19 +192,6 @@ func main(){
 		Empty_base Base
 		ES1 Base
 		ES2 Base
-		// ES1 =Base{
-		// 	speed: -34,
-		// 	balance:0,
-		// 	addmg: 600,
-		// 	crit: 10,
-		// 	cdmg: 0}
-		// // ES2 =Base{
-		// // 	speed: -48,
-		// // 	balance: 9,
-		// // 	addmg: 850,
-		// // 	crit: 0,
-		// // 	cdmg: 0,
-		// // }
 	)
 	character_stats.setDefaultCharVal();
 	
@@ -221,7 +208,6 @@ func main(){
 		if(key_input[0]=='y'||key_input[0]=='y'){
 			//You wish to change default stats
 			character_stats.inputNewBase()
-			//fmt.Println("\n",character_stats)
 		}
 		exit(key_input)
 
