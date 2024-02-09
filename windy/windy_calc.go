@@ -208,6 +208,7 @@ func main(){
 		if(key_input[0]=='y'||key_input[0]=='y'){
 			//You wish to change default stats
 			character_stats.inputNewBase()
+			
 		}
 		exit(key_input)
 
