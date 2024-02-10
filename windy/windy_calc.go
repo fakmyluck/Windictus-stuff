@@ -113,7 +113,13 @@ func finalDPS(finalStats Stats)float32{
 	return dps/finalStats.animation_speed
 }
 
-func returnInputInt()int{
+func exit(i string){
+	if(i[0]=='q'||i[0]=='Q'||i[0]=='E'||i[0]=='q'){
+		panic("+bye")
+	}
+}
+
+func returnInputInt(num int)int{
 	// // string to int
 	// var key_input string
 	// for{
@@ -127,20 +133,17 @@ func returnInputInt()int{
 	// 		return i
 	// 	}
 	// }
-	return int(returnInputFloat())
+	return int(returnInputFloat(float32(num)))
 }
 
-func exit(i string){
-	if(i[0]=='q'||i[0]=='Q'||i[0]=='E'||i[0]=='q'){
-		panic("+bye")
-	}
-}
-
-func returnInputFloat()float32{
+func returnInputFloat(float float32)float32{
    // string to float 
    var key_input string
    	for{
-		fmt.Scan(&key_input)
+		fmt.Scanln(&key_input)
+		if(len(key_input)==0){
+			return float
+		}
 		exit(key_input)
 		i, err := strconv.ParseFloat(key_input, 32)
 		if err != nil {
@@ -154,35 +157,50 @@ func returnInputFloat()float32{
 }
 
 func (output *Base)inputNewBase(){
-	fmt.Print("Enter your Balance:")
-	output.balance=returnInputInt()
-	fmt.Print("Enter your Speed:")
-	output.speed=returnInputInt()
-	fmt.Print("Enter your Additional Damage:")
-	output.addmg=returnInputInt()
-	fmt.Print("Enter your Crit Chance:")
-	output.crit=returnInputInt()
-	fmt.Print("Enter your Crit Damage:")
-	output.cdmg=0
+	fmt.Printf("Enter your Balance[%v]:",output.balance)
+	output.balance=returnInputInt(output.balance)
+	fmt.Printf("Enter your Speed[%v]:",output.speed)
+	output.speed=returnInputInt(output.speed)
+	fmt.Printf("Enter your Additional Damage[%v]:",output.addmg)
+	output.addmg=returnInputInt(output.addmg)
+	fmt.Printf("Enter your Crit Chance[%v]:",output.crit)
+	output.crit=returnInputInt(output.crit)
+	fmt.Printf("Enter your Crit Damage[%v]:",output.cdmg)
+	output.cdmg=returnInputFloat(output.cdmg)
    	for(output.cdmg>=3 || output.cdmg<1.5){
-		output.cdmg=returnInputFloat()
 		if(output.cdmg>=3 || output.cdmg<1.5){
-			fmt.Printf("Your Crit Damage (%v) is weird:",output.cdmg)
+			fmt.Printf("Your Crit Damage (%v) is weird, try again:",output.cdmg)
+			output.cdmg=returnInputFloat(output.cdmg)
    		}
 	}
 }
 
 func (output *Base) inputES(str string){
-	fmt.Printf("Enter %s Balance:",str)
-	output.balance=returnInputInt()
-	fmt.Printf("Enter %s Speed:",str)
-	output.speed=returnInputInt()
-	fmt.Printf("Enter %s Additional Damage:",str)
-	output.addmg=returnInputInt()
-	fmt.Printf("Enter %s Crit Chance:",str)
-	output.crit=returnInputInt()
+	fmt.Printf("Enter %s Balance[%v]:",str,output.balance)
+	output.balance=returnInputInt(output.balance)
+	fmt.Printf("Enter %s Speed[%v]:",str,output.speed)
+	output.speed=returnInputInt(output.speed)
+	fmt.Printf("Enter %s Additional Damage[%v]:",str,output.addmg)
+	output.addmg=returnInputInt(output.addmg)
+	fmt.Printf("Enter %s Crit Chance[%v]:",str,output.crit)
+	output.crit=returnInputInt(output.crit)
 	// fmt.Printf("Enter %s Crit Damage:")
 	// output.cdmg=returnInputFloat()
+}
+
+func ask(question string)bool{
+	var key_input string
+	//>> ADD fmt print here with question
+	fmt.Printf("%s\n(Y/N/Q) ",question)
+	fmt.Scanln(&key_input)
+	if(len(key_input)==0){
+		return false
+	}
+	if(key_input[0]=='y'||key_input[0]=='Y'){
+		return true
+	}
+	exit(key_input)
+	return false
 }
 
 func main(){
@@ -199,36 +217,28 @@ func main(){
 	totalStats.SummScrollValStats(character_stats)
 	printStats(totalStats)
 	fmt.Printf("\nYour Dps score with default stats is:\n\n\t> %.1f%s <\n\n\n",finalDPS(totalStats),"%")
-
-	var key_input string
+	var naked_DPS,scrolled_DPS float32
 	for{
 		ES1,ES2=Empty_base,Empty_base
-		fmt.Print("do You wish to edit your character stats?\n(Y/N/Q) ")
-		fmt.Scan(&key_input)
-		if(key_input[0]=='y'||key_input[0]=='y'){
+		
+		if(ask("do You wish to edit your character stats?")){
 			//You wish to change default stats
 			character_stats.inputNewBase()
-			
 		}
-		exit(key_input)
 
-		fmt.Print("do You wish to add Enchant scroll?\n(Y/N/Q) ")
-		fmt.Scan(&key_input)
-		if(key_input[0]=='y'||key_input[0]=='y'){
+		if(ask("do You wish to add Enchant scroll?")){
 			ES1.inputES("1st ES")
-		
-			fmt.Println("do You wish to add another Enchant scroll?\n(Y/N/Q) ")
-			fmt.Scan(&key_input)
-			if(key_input[0]=='y'||key_input[0]=='y'){
-				ES1.inputES("2st ES")
+	
+			if(ask("do You wish to add another Enchant scroll?")){
+				ES2.inputES("2st ES")
 			}
-			exit(key_input)
 		}
-		exit(key_input)
 
 		totalStats.base_stats=character_stats
+		naked_DPS=finalDPS(totalStats)
 		totalStats.SummScrollValStats(ES1,ES2)
-		printStats(totalStats)
-		fmt.Printf("\nYour Dps score with those stats is:\n\n\t> %.1f%s <\n\n\n",finalDPS(totalStats),"%")
+		scrolled_DPS=finalDPS(totalStats)
+		fmt.Printf("\nYour Dps score with those stats is:\n\n\t> %.1f%s <\n\n\n",scrolled_DPS,"%")
+		fmt.Printf("DPS diff: %.2f%s\n\n",((scrolled_DPS/naked_DPS-1)*100),"%")
 	}
 }
