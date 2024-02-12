@@ -208,8 +208,10 @@ func main(){
 	printStats(totalStats)
 	fmt.Printf("\nYour Dps score with default stats is:\n\n\t> %.1f%s <\n\n\n",finalDPS(totalStats),"%")
 	var naked_DPS,scrolled_DPS float32
+	var scrolls_changed bool
+	var IncDec string ="ERROR"
 	for{
-		ES1,ES2=Empty_base,Empty_base
+		ES1,ES2,scrolls_changed=Empty_base,Empty_base,false
 		
 		if(ask("do You wish to edit your character stats?")){
 			//You wish to change default stats
@@ -222,6 +224,7 @@ func main(){
 			if(ask("do You wish to add another Enchant scroll?")){
 				ES2.inputES("2st ES")
 			}
+			scrolls_changed=true
 		}
 
 		totalStats.base_stats=character_stats
@@ -229,6 +232,19 @@ func main(){
 		totalStats.SummScrollValStats(ES1,ES2)
 		scrolled_DPS=finalDPS(totalStats)
 		fmt.Printf("\nYour Dps score with those stats is:\n\n\t> %.1f%s <\n\n\n",scrolled_DPS,"%")
-		fmt.Printf("DPS diff: %.2f%s\n\n",((scrolled_DPS/naked_DPS-1)*100),"%")
+		if(scrolls_changed){
+			if(scrolled_DPS-naked_DPS<=0){
+				if(scrolled_DPS==naked_DPS){
+					IncDec="(no diff)"
+				}else{
+					IncDec="decrease"
+				}
+			}else{
+				IncDec="increase"
+			}
+			fmt.Printf("DPS diff: %.2f%s\n\n",((scrolled_DPS/naked_DPS-1)*100),"%")
+		}else{
+			fmt.Println()
+		}
 	}
 }
