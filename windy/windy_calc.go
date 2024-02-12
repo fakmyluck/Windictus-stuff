@@ -119,30 +119,19 @@ func exit(i string){
 	}
 }
 
-func returnInputInt(num int)int{
-	// // string to int
-	// var key_input string
-	// for{
-	// 	fmt.Scan(&key_input)
-	// 	i, err := strconv.Atoi(key_input)
-	// 	if err != nil {
-	// 		fmt.Println("Something went WRONG, you can print this in Discord if it require a fix")
-	// 		fmt.Print("Do it again: ") 
-	// 		//panic(err)
-	// 	}else{
-	// 		return i
-	// 	}
-	// }
-	return int(returnInputFloat(float32(num)))
+func NewInputInt(num *int){
+	float:=float32(*num)
+	NewInputFloat(&float)
+	*num=int(float)
 }
 
-func returnInputFloat(float float32)float32{
+func NewInputFloat(float *float32){
    // string to float 
    var key_input string
    	for{
 		fmt.Scanln(&key_input)
 		if(len(key_input)==0){
-			return float
+			return
 		}
 		exit(key_input)
 		i, err := strconv.ParseFloat(key_input, 32)
@@ -151,41 +140,42 @@ func returnInputFloat(float float32)float32{
 			fmt.Print("Do it again: ") 
 			//panic(err)
 		}else{
-			return float32(i)
+			*float=float32(i)
+			return
 		}
 	}
 }
 
 func (output *Base)inputNewBase(){
 	fmt.Printf("Enter your Balance[%v]:",output.balance)
-	output.balance=returnInputInt(output.balance)
+	NewInputInt(&output.balance)
 	fmt.Printf("Enter your Speed[%v]:",output.speed)
-	output.speed=returnInputInt(output.speed)
+	NewInputInt(&output.speed)
 	fmt.Printf("Enter your Additional Damage[%v]:",output.addmg)
-	output.addmg=returnInputInt(output.addmg)
+	NewInputInt(&output.addmg)
 	fmt.Printf("Enter your Crit Chance[%v]:",output.crit)
-	output.crit=returnInputInt(output.crit)
+	NewInputInt(&output.crit)
 	fmt.Printf("Enter your Crit Damage[%v]:",output.cdmg)
-	output.cdmg=returnInputFloat(output.cdmg)
+	NewInputFloat(&output.cdmg)
    	for(output.cdmg>=3 || output.cdmg<1.5){
 		if(output.cdmg>=3 || output.cdmg<1.5){
 			fmt.Printf("Your Crit Damage (%v) is weird, try again:",output.cdmg)
-			output.cdmg=returnInputFloat(output.cdmg)
+			NewInputFloat(&output.cdmg)
    		}
 	}
 }
 
 func (output *Base) inputES(str string){
 	fmt.Printf("Enter %s Balance[%v]:",str,output.balance)
-	output.balance=returnInputInt(output.balance)
+	NewInputInt(&output.balance)
 	fmt.Printf("Enter %s Speed[%v]:",str,output.speed)
-	output.speed=returnInputInt(output.speed)
+	NewInputInt(&output.speed)
 	fmt.Printf("Enter %s Additional Damage[%v]:",str,output.addmg)
-	output.addmg=returnInputInt(output.addmg)
+	NewInputInt(&output.addmg)
 	fmt.Printf("Enter %s Crit Chance[%v]:",str,output.crit)
-	output.crit=returnInputInt(output.crit)
+	NewInputInt(&output.crit)
 	// fmt.Printf("Enter %s Crit Damage:")
-	// output.cdmg=returnInputFloat()
+	// output.cdmg=NewInputFloat(&)
 }
 
 func ask(question string)bool{
