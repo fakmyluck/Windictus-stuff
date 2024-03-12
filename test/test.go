@@ -70,13 +70,15 @@ func returnMaps()(*map[string]val_pos,*map[string]val_pos){
         "Crit Chance": {115,3,4},
         "Crit Damage": {210,4,4},
 
-        "balance surplus": {0, 5,4},  
-        "balance percent": {0,6,4},   // 0,1 - 1
-        "adddmg percent": {0, 7,4},       
-        "animation speed": {0, 8,4},  
-        "real crit": {0,9,4},         // CRIT<=50
-        "new crit damage": {0,10,4},   // crit damage with balance surplus
-        "crit mod": {0, 11,4},         //dmg modifier from crits
+        "dps":{0,5,4}
+
+        "balance surplus": {0, 6,4},  
+        "balance percent": {0,7,4},   // 0,1 - 1
+        "adddmg percent": {0, 8,4},       
+        "animation speed": {0, 9,4},  
+        "real crit": {0,10,4},         // CRIT<=50
+        "new crit damage": {0,11,4},   // crit damage with balance surplus
+        "crit mod": {0, 12,4},         //dmg modifier from crits
     }
     n:=make(map[string]val_pos)
     for key,val:= range m{
@@ -147,6 +149,42 @@ func debug(a int,b int){
     fmt.Print(a,b)
 }
 
+func calcDPS(m map[string]&val_pos){
+        "Additional Damage": {2750,0,4},
+        "Balance": {90,1,4},
+        "Speed": {102,2,4},
+        "Crit Chance": {115,3,4},
+        "Crit Damage": {210,4,4},
+
+        "dps":{0,5,4}
+        
+        "balance surplus": {0, 6,4},  
+        "balance percent": {0,7,4},   // 0,1 - 1
+        "adddmg percent": {0, 8,4},       
+        "animation speed": {0, 9,4},  
+        "real crit": {0,10,4},         // CRIT<=50
+        "new crit damage": {0,11,4},   // crit damage with balance surplus
+        "crit mod": {0, 12,4},         //dmg modifier from crits
+
+    const addmg_const float32 = 0.0005740528129
+    m["balance surplus"].val=   m["Balance"].val-m["Balance"].val%90
+    m["balance percent"].val=   1000-(100-m["Balance"].val%90*1000)/2
+    m["adddmg percent"].val =   int(float32(m["Additional Damage"].val)*addmg_const*1000)
+    m["animation speed"].val=   int(1/((200+float32(m["Speed"].val))/200))
+    m["real crit"].val      =   crit // CRIT<=50
+    m["new crit damage"].val=
+    m["crit mod"].val       =
+
+
+    bal_perc:=
+        dps:=finalStats.balance_perc+finalStats.addmg_perc
+        //fmt.Println("DPS_perc: ",dps)
+        dps=dps*finalStats.crit_mod
+        //fmt.Println("mult: ",finalStats.crit_mod/finalStats.animation_speed)
+        return dps/finalStats.animation_speed
+    
+}
+
 func returnArray()(*[2][13]val_pos){
     var tmp =[13]val_pos{
     //{value,y,x}(y,x == print position)
@@ -156,7 +194,7 @@ func returnArray()(*[2][13]val_pos){
         {115,3,0},
         {210,4,0},
 
-        {0,5,0}
+        {0,5,0},
 
         {0, 6,0},  
        	{0,7,0},   // 0,1 - 1
@@ -249,8 +287,7 @@ func set_number(num *int){
     fmt.Print(num)
     if(accum_number>=0){
         *num =accum_number
-    }
-    fmt.Print("  ",*num)
+    }    
     accum_number=-1
 }
 func accumulate_number(by byte){
