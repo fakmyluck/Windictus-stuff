@@ -70,7 +70,7 @@ func returnMaps()(*map[string]val_pos,*map[string]val_pos){
         "Crit Chance": {115,3,4},
         "Crit Damage": {210,4,4},
 
-        "dps":{0,5,4}
+        "dps":{0,5,4},
 
         "balance surplus": {0, 6,4},  
         "balance percent": {0,7,4},   // 0,1 - 1
@@ -90,13 +90,70 @@ func returnMaps()(*map[string]val_pos,*map[string]val_pos){
 }
 
 func printStat(val int,name string,x int, y int){
-    const name_offset =6
+    const name_offset =10
 
     cmov(x              ,y)
     fmt.Print(val)
     cmov(x+name_offset  ,y)
     fmt.Print(name)
 }
+
+func printDPS(val int,x int,y int){
+    const name_offset =10
+
+    cmov(x              ,y)
+    tmp:=val%1000/10
+    if(tmp%10>=5){
+        tmp+=10
+    }
+    tmp=tmp/10
+    if(tmp%10==0){
+        tmp=tmp/10
+    }
+    
+    fmt.Printf("%v,%v%s",val/1000,tmp,"%")
+    cmov(x+name_offset  ,y)
+    fmt.Print("Damage Potential")
+}
+
+func drawDif(main val_pos, sec val_pos){
+    const offset =40
+    
+
+    intHax:=main.val*100000/sec.val
+
+    str:=intToString(intHax-100000)
+    cmov(offset-len(str)/2     ,main.y+2)
+    fmt.Print(str)
+}
+
+func intToString(num int)string{
+    num=num/10+num%10/5
+    num=num/10+num%10/5
+ 
+    if(num==0){
+        return "No Difference"
+    }
+    if(num>999){
+        return "Secondary suck"
+    }
+    var sign string
+    if(num<0){
+        sign="-"
+        num=num*-1
+    }else{
+        sign="+"
+    }
+    
+    byt:=byte(num%10)
+    dec:=[]byte{byt/10+'0',byt%10+'0'}        // <0
+    byt=byte(num/10)
+    digit:=[]byte{byt/10+'0',byt%10+'0'}      // >0
+    if(digit[0]=='0'){
+        digit=digit[1:2]    // ummm.... yes?
+    }
+    return sign+string(digit)+"."+string(dec)+"%"
+}      
 
 func draw_stuff_offset(arr []int)(int, int){
     if(len(arr)==0){
@@ -108,7 +165,7 @@ func draw_stuff_offset(arr []int)(int, int){
 }
 
 func printHeader(header string){
-    lm:=23 //additional damage + 6 offset
+    lm:=27 //additional damage + 10 offset
     lh:=len(header)
     if(lh>=lm){
         fmt.Print(header)
@@ -138,8 +195,15 @@ func draw_stuff(m map[string]*val_pos,header string, offset ...int){
     //add debug option in future (print all)
     
     for key, value := range m{
+        // if(key[0]<91){
         if(key[0]<91){  //Print Only A-Z
             printStat(value.val,key,    x+value.x, y+value.y)
+        }
+        // }else{
+        //     printStat(value.val,key,    x+value.x, y+value.y+1)
+        // }
+        if(key=="dps"){
+            printDPS(value.val,    x+value.x, y+value.y+1)
         }
     }
 }
@@ -149,75 +213,66 @@ func debug(a int,b int){
     fmt.Print(a,b)
 }
 
-func calcDPS(m map[string]&val_pos){
-        "Additional Damage": {2750,0,4},
-        "Balance": {90,1,4},
-        "Speed": {102,2,4},
-        "Crit Chance": {115,3,4},
-        "Crit Damage": {210,4,4},
+func calcDPS(m map[string]*val_pos){
+    const ten=100000
+    //const addmg_const  = 0.0005740528129
+    const addmg_const = 5740528129
 
-        "dps":{0,5,4}
-        
-        "balance surplus": {0, 6,4},  
-        "balance percent": {0,7,4},   // 0,1 - 1
-        "adddmg percent": {0, 8,4},       
-        "animation speed": {0, 9,4},  
-        "real crit": {0,10,4},         // CRIT<=50
-        "new crit damage": {0,11,4},   // crit damage with balance surplus
-        "crit mod": {0, 12,4},         //dmg modifier from crits
+    tmp:=0
+    if(m["Balance"].val>90){
+        tmp=m["Balance"].val-90
+    }
+    m["balance surplus"].val=   tmp
+    m["real balance"].val   =   m["Balance"].val-m["balance surplus"].val
+    m["balance percent"].val=   (100-(100-m["real balance"].val)/2)  *ten /100         //           <100
+    m["adddmg percent"].val =   m["Additional Damage"].val*addmg_const/1000/ten    // /100000
+    m["animation speed"].val=   ten*ten/(ten*(200+m["Speed"].val)/200)             // /100000
+    m["real crit"].val      =   m["Crit Chance"].val
+    if(m["Crit Chance"].val>50){
+        m["real crit"].val  =   50
+    }
+    m["new crit damage"].val=   m["Crit Damage"].val+m["balance surplus"].val/3
+    m["crit mod"].val       =   (m["real crit"].val*(m["new crit damage"].val-100)+10000)*10 // /100000
+    dps:=(m["balance percent"].val+m["adddmg percent"].val)*m["crit mod"].val
 
-    const addmg_const float32 = 0.0005740528129
-    m["balance surplus"].val=   m["Balance"].val-m["Balance"].val%90
-    m["balance percent"].val=   1000-(100-m["Balance"].val%90*1000)/2
-    m["adddmg percent"].val =   int(float32(m["Additional Damage"].val)*addmg_const*1000)
-    m["animation speed"].val=   int(1/((200+float32(m["Speed"].val))/200))
-    m["real crit"].val      =   crit // CRIT<=50
-    m["new crit damage"].val=
-    m["crit mod"].val       =
-
-
-    bal_perc:=
-        dps:=finalStats.balance_perc+finalStats.addmg_perc
-        //fmt.Println("DPS_perc: ",dps)
-        dps=dps*finalStats.crit_mod
-        //fmt.Println("mult: ",finalStats.crit_mod/finalStats.animation_speed)
-        return dps/finalStats.animation_speed
+    m["dps"].val=dps/m["animation speed"].val
+    
     
 }
 
-func returnArray()(*[2][13]val_pos){
-    var tmp =[13]val_pos{
+func returnArray()(*[2][14]val_pos){
+    var tmp =[14]val_pos{
     //{value,y,x}(y,x == print position)
         {2750,0,0},
-        {90,1,0},
+        {103,1,0},
         {102,2,0},
         {115,3,0},
         {210,4,0},
 
-        {0,5,0},
-
-        {0, 6,0},  
-       	{0,7,0},   // 0,1 - 1
-        {0, 8,0},       
-        {0, 9,0},  
-        {0,10,0},         // CRIT<=50
-        {0,11,0},   // crit damage with balance surplus
-        {0, 12,0},         //dmg modifier from crits
+        {0, 5,0},  
+       	{0,6,0},   // 0,1 - 1
+        {0, 7,0},       
+        {0, 8,0},  
+        {0,9,0},         // CRIT<=50
+        {0,10,0},   // crit damage with balance surplus
+        {0, 11,0},         //dmg modifier from crits
+        {0,12,0},
+        {0,13,0},
     }
-    var arr [2][13]val_pos
+    var arr [2][14]val_pos
     arr[0]=tmp
     arr[1]=tmp
 
     for index := range arr[0]{
         arr[0][index].x=5
         arr[0][index].y=index+3
-        arr[1][index].x=40
+        arr[1][index].x=50
         arr[1][index].y=index+3
     }
     return &arr
 }
 
-func returnMap(arr *[13]val_pos)map[string]*val_pos{
+func returnMap(arr *[14]val_pos)map[string]*val_pos{
 	return map[string]*val_pos{
         "Additional Damage": &arr[0],
         "Balance": &arr[1],
@@ -225,38 +280,90 @@ func returnMap(arr *[13]val_pos)map[string]*val_pos{
         "Crit Chance": &arr[3],
         "Crit Damage": &arr[4],
 
-        "dps":&arr[5],
-
-        "balance surplus": &arr[6],  
-        "balance percent": &arr[7],   // 0,1 - 1
-        "adddmg percent": &arr[8],       
-        "animation speed": &arr[9],  
-        "real crit": &arr[10],         // CRIT<=50
-        "new crit damage": &arr[11],   // crit damage with balance surplus
-        "crit mod": &arr[12],         //dmg modifier from crits
+        "dps":  &arr[5],
+        "real balance":    &arr[6],
+        "balance surplus": &arr[7],  
+        "balance percent": &arr[8],   // 0,1 - 1
+        "adddmg percent": &arr[9],       
+        "animation speed": &arr[10],  
+        "real crit": &arr[11],         // CRIT<=50
+        "new crit damage": &arr[12],   // crit damage with balance surplus
+        "crit mod": &arr[13],         //dmg modifier from crits
     }
 }
 
 var blink byte
 func drawArrow(pos val_pos){
-    offset:=3-int(blink%3)
-    cmov(pos.x-offset,pos.y)
-    arrow:=">"
-    fmt.Print(arrow)
+    var arrow =[]byte{' ',' ',' '}
+    arrow[blink%3]='>'
+    cmov(pos.x-4,pos.y)
+
+    fmt.Print(string(arrow)+">")
 }
 
-func handle_input(mov string,arr *[2][13]val_pos){
-    
+func check_acc_num(pos val_pos){
+    if(accum_number<0){
+        return
+    }
+    cmov(pos.x,pos.y)
+    fmt.Print("          ")
+    cmov(pos.x,pos.y)
+    if(blink%3!=0){
+        fmt.Print(accum_number)
+    }
+
+    cmov(pos.x,13)
+    fmt.Print("Pres E to confirm")
+}
+
+func checkarrowinput(mov string){
+    if(len(mov)<3){
+        return
+    }                
+    if(mov[1]==91){
+        switch mov[2] {
+        case 65:   // 27 91 65 up
+            validate_arrow_y(-1)
+        case 66:   // 27 91 66 down 
+            validate_arrow_y(1)
+        case 67:   // 27 91 67 >
+            validate_arrow_x(1)
+        case 68:   // 27 91 68 <
+            validate_arrow_x(-1)
+        }
+    }
+}
+
+var exit byte=0
+func handle_input(mov string,arr *[2][14]val_pos){
     switch mov[0] {
     case 'w':
         validate_arrow_y(-1)
     case 's':
         validate_arrow_y(1)
-    case 'a':
-        validate_arrow_x(-1)
     case 'd':
         validate_arrow_x(1)
+    case 'a':
+        validate_arrow_x(-1)
+    case 27:
+        checkarrowinput(mov)
+    case 'q':
+        accum_number=-1
+        exit++
+        if(exit>5){
+            panic("Exit successfull!")
+        }
+    case 'Q':
+        accum_number=-1
+        exit++
+        if(exit>5){
+            panic("Exit successfull!")
+        }
     case 'e':
+        set_number(&arr[user.x][user.y].val)
+    case 'E':
+        set_number(&arr[user.x][user.y].val)
+    case 10:    //enter
         set_number(&arr[user.x][user.y].val)
     case '0':
         accumulate_number(mov[0])
@@ -278,8 +385,13 @@ func handle_input(mov string,arr *[2][13]val_pos){
         accumulate_number(mov[0])
     case '9':
         accumulate_number(mov[0])
+    case 127:
+        accum_number=accum_number/10
     default:
-        return
+        cmov(11,17)
+        fmt.Print("Use latin layout")
+        cmov(11,18)
+        fmt.Print("W A S D + numbers")
     }
 }
 
@@ -328,23 +440,40 @@ func validate_arrow_y(movement int){
     user.y=tmp
 }
 
+func drwar_tutorial(x int,y int){
+    cmov(x+2,y)
+    fmt.Print("  W        enter numbers")
+    cmov(x,y+2)
+    fmt.Print("A   e   D    E: to confirm")
+    cmov(x+2,y+4)
+    fmt.Print("  S        Q(hold): to Exit")
+}
 var user =arrow_pos{x:0,y:0}
 func main() {
-    
+    //var last_exit byte
     mainArr_ptr:=   returnArray()
     mainMap_ptr,compMap_ptr:=   returnMap(&mainArr_ptr[0]),returnMap(&mainArr_ptr[1])//returnMap(compArr_ptr)
 
     clear()
-
-
+    drwar_tutorial(11,15)
+    
+    tmp:=*compMap_ptr["Balance"]
+    tmp.val=90
+    *compMap_ptr["Balance"]=tmp
+    calcDPS(mainMap_ptr)
+    calcDPS(compMap_ptr)
     draw_stuff(mainMap_ptr,"Main_Stats")
    
     draw_stuff(compMap_ptr,"Secondary_Stats")
-    
-    drawArrow(mainArr_ptr[user.x][user.y])
-  debug(user.x,user.y)
-fmt.Print("\n",mainArr_ptr[user.x][user.y])
-    cmov(0,23)
+
+   
+
+    //drawArrow(mainArr_ptr[user.x][user.y])
+
+   
+    drawDif(mainArr_ptr[0][5],mainArr_ptr[1][5])
+// fmt.Print("\n",mainArr_ptr[user.x][user.y])
+//     cmov(0,23)
    //return
     ch := make(chan string)
     go func(ch chan string) {
@@ -352,7 +481,7 @@ fmt.Print("\n",mainArr_ptr[user.x][user.y])
         exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
         // do not display entered characters on the screen
         exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
-        var b []byte = make([]byte, 1)
+        var b []byte = make([]byte, 3)
         for {
             os.Stdin.Read(b)
             ch <- string(b)
@@ -362,23 +491,34 @@ fmt.Print("\n",mainArr_ptr[user.x][user.y])
     }(ch)
 
     for {
-        select {
+        select {    //
             case stdin, _ := <-ch:
+                clear()
                 cmov(0,23)
-                fmt.Print("Keys pressed:", stdin)
+                fmt.Printf("Keys pressed: %s[%v]", stdin,stdin[0])
                 handle_input(stdin,mainArr_ptr)
-            default:
                 
-				
+                calcDPS(mainMap_ptr)
+                calcDPS(compMap_ptr)
+                draw_stuff(mainMap_ptr,"Main_Stats")
+                draw_stuff(compMap_ptr,"Secondary_Stats")
+                
+                drawDif(mainArr_ptr[0][5],mainArr_ptr[1][5])
+                
+            default:
+                exit=0
             //     fmt.Println("Working..")
         }
-        draw_stuff(mainMap_ptr,"Main_Stats")
-        draw_stuff(compMap_ptr,"Secondary_Stats")
+       
+        check_acc_num(mainArr_ptr[user.x][user.y])
         drawArrow(mainArr_ptr[user.x][user.y])
+        
+
+
+
         cmov(0,23)
-        fmt.Print(accum_number)
         time.Sleep(time.Millisecond * 175)
-        clear()
+        
 		blink++
     }
 
